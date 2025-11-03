@@ -82,7 +82,7 @@ GREEN = (34, 139, 34)
 BROWN = (139, 69, 19)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Flappy Bird")
+pygame.display.set_caption("Flappy Modi")
 clock = pygame.time.Clock()
 game_font = pygame.font.Font(None, 40)
 
@@ -172,4 +172,5 @@ while True:
     clock.tick(60)
 
 pygame.quit()
+
 sys.exit()
