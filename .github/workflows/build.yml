@@ -12,15 +12,51 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Build APK with Buildozer
-      uses: ArtemSBulgakov/buildozer-action@master
+    - name: Setup Python
+      uses: actions/setup-python@v4
       with:
-        workdir: .
-        buildozer_version: stable
+        python-version: '3.9'
     
-    - name: Upload APK
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          openjdk-11-jdk \
+          openjdk-11-jdk-headless \
+          cython3 \
+          libffi-dev \
+          libssl-dev \
+          libjpeg-dev \
+          zlib1g-dev \
+          ccache \
+          autoconf \
+          libtool \
+          pkg-config
+    
+    - name: Install Buildozer and Cython
+      run: |
+        python -m pip install --upgrade pip
+        pip install buildozer cython
+    
+    - name: Build APK
+      run: |
+        cd ${{ github.workspace }}
+        buildozer android debug 2>&1 | tail -100
+    
+    - name: Upload APK Artifact
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: flappy-modi-apk
         path: bin/*.apk
         retention-days: 30
+    
+    - name: Show build results
+      if: always()
+      run: |
+        echo "Build directory contents:"
+        ls -lah bin/ 2>/dev/null || echo "No bin directory"
+        echo "Full workspace:"
+        find . -name "*.apk" 2>/dev/null || echo "No APK found"
