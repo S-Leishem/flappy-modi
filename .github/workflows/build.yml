@@ -27,46 +27,20 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          build-essential \
-          git \
-          cython3 \
-          libffi-dev \
-          libssl-dev \
-          libjpeg-dev \
-          zlib1g-dev \
-          autoconf \
-          libtool \
-          pkg-config \
-          ccache \
-          openjdk-11-jdk-headless
+          build-essential git cython3 libffi-dev libssl-dev \
+          libjpeg-dev zlib1g-dev autoconf libtool pkg-config ccache
     
-    - name: Install Android SDK
-      run: |
-        mkdir -p ~/android-sdk
-        cd ~/android-sdk
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-        unzip -q commandlinetools-linux-9477386_latest.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true
-        
-        export PATH=~/android-sdk/cmdline-tools/latest/bin:$PATH
-        export ANDROID_SDK_ROOT=~/android-sdk
-        
-        yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-31" "build-tools;31.0.0" "ndk;25.2.9519653" 2>&1 | grep -E "(Installing|Installed)"
-    
-    - name: Install Buildozer
+    - name: Install Buildozer and Cython
       run: |
         python -m pip install --upgrade pip
         pip install buildozer cython
     
-    - name: Build APK
+    - name: Build APK with auto-accept licenses
       run: |
-        export ANDROID_SDK_ROOT=~/android-sdk
-        export ANDROID_HOME=~/android-sdk
-        export PATH=~/android-sdk/cmdline-tools/latest/bin:$PATH
-        
-        buildozer android debug 2>&1 | tail -100
+        buildozer android debug -- --accept-sdk-license
       timeout-minutes: 180
+      env:
+        BUILDOZER_ACCEPT_SDK_LICENSE: "yes"
     
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -76,15 +50,9 @@ jobs:
         path: bin/*.apk
         retention-days: 30
     
-    - name: Show build status
+    - name: Check results
       if: always()
       run: |
-        echo "=== APK Build Status ==="
-        if [ -f bin/*.apk ]; then
-          ls -lh bin/*.apk
-          echo "✅ APK built successfully!"
-        else
-          echo "❌ APK build failed"
-          echo "=== Build log (last 50 lines) ==="
-          find . -name "buildozer.log" -exec tail -50 {} \;
-        fi
+        echo "=== Build Results ==="
+        ls -lh bin/*.apk 2>/dev/null && echo "✅ APK built!" || echo "❌ Build failed"
+        tail -100 .buildozer/android/platform/build-*_armeabi-v7a/build/outputs/buildozer.log 2>/dev/null || echo "Log not found"
