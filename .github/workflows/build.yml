@@ -15,6 +15,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+    
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
@@ -23,7 +29,21 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential git openjdk-11-jdk cython3
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          openjdk-11-jdk \
+          cython3 \
+          libffi-dev \
+          libssl-dev \
+          libjpeg-dev \
+          zlib1g-dev
+    
+    - name: Install Android SDK tools
+      run: |
+        mkdir -p ~/.android
+        echo "sdk.dir=$ANDROID_SDK_ROOT" > ~/.android/local.properties
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list || true
     
     - name: Install Python packages
       run: |
@@ -32,9 +52,14 @@ jobs:
     
     - name: Build APK with Buildozer
       run: |
+        cd ${{ github.workspace }}
         buildozer android debug
+      env:
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+        ANDROID_HOME: ${{ env.ANDROID_HOME }}
     
     - name: Upload APK as Artifact
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: flappy-modi-debug-apk
