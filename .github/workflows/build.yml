@@ -12,19 +12,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'adopt'
+    
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
     
-    - name: Install dependencies
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+      with:
+        api-level: 31
+        ndk-version: 25.2.9519653
+        build-tools-version: '31.0.0'
+    
+    - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
           build-essential \
           git \
-          openjdk-11-jdk \
-          openjdk-11-jdk-headless \
           cython3 \
           libffi-dev \
           libssl-dev \
@@ -40,10 +51,16 @@ jobs:
         python -m pip install --upgrade pip
         pip install buildozer cython
     
+    - name: Accept Android Licenses
+      run: |
+        mkdir -p ~/.android
+        echo "sdk.dir=$ANDROID_SDK_ROOT" > ~/.android/local.properties
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
+    
     - name: Build APK
       run: |
         cd ${{ github.workspace }}
-        buildozer android debug 2>&1 | tail -100
+        buildozer android debug 2>&1
     
     - name: Upload APK Artifact
       if: success()
@@ -53,10 +70,10 @@ jobs:
         path: bin/*.apk
         retention-days: 30
     
-    - name: Show build results
+    - name: Check build results
       if: always()
       run: |
-        echo "Build directory contents:"
+        echo "=== Build directory contents ==="
         ls -lah bin/ 2>/dev/null || echo "No bin directory"
-        echo "Full workspace:"
+        echo "=== APK files ==="
         find . -name "*.apk" 2>/dev/null || echo "No APK found"
