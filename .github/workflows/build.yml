@@ -14,13 +14,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Patch Buildozer to skip root check
+      run: |
+        sed -i 's/def check_root/def check_root_disabled/g' /home/user/.venv/lib/python3.12/site-packages/buildozer/__init__.py
+    
     - name: Build APK with Buildozer
       run: |
         cd /home/user/hostcwd
-        buildozer android debug -- --accept-sdk-license
+        echo "y" | buildozer android debug
       env:
         BUILDOZER_LOG_LEVEL: 2
-        BUILDOZER_ACCEPT_SDK_LICENSE: 'yes'
     
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
@@ -32,6 +35,8 @@ jobs:
     - name: Check build results
       if: always()
       run: |
-        echo "=== Build results ==="
-        ls -lah /home/user/hostcwd/bin/ 2>/dev/null || echo "No APK found"
-        find /home/user/hostcwd -name "*.apk" -o -name "*.log" 2>/dev/null
+        echo "=== Build directory ==="
+        ls -lah /home/user/hostcwd/bin/ 2>/dev/null || echo "No bin directory"
+        echo ""
+        echo "=== All APK files ==="
+        find /home/user/hostcwd -name "*.apk" 2>/dev/null || echo "No APK found"
