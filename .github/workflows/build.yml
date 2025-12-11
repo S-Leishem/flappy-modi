@@ -17,9 +17,10 @@ jobs:
     - name: Build APK with Buildozer
       run: |
         cd /home/user/hostcwd
-        buildozer android debug
+        buildozer android debug -- --accept-sdk-license
       env:
         BUILDOZER_LOG_LEVEL: 2
+        BUILDOZER_ACCEPT_SDK_LICENSE: 'yes'
     
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
@@ -33,4 +34,4 @@ jobs:
       run: |
         echo "=== Build results ==="
         ls -lah /home/user/hostcwd/bin/ 2>/dev/null || echo "No APK found"
-        find /home/user/hostcwd -name "*.apk" 2>/dev/null || echo "Search complete"
+        find /home/user/hostcwd -name "*.apk" -o -name "*.log" 2>/dev/null
