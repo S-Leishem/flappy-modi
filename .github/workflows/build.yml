@@ -10,20 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: kivy/buildozer:latest
+      options: --user 1000
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Patch Buildozer to skip root check
+    - name: Fix permissions
       run: |
-        sed -i 's/def check_root/def check_root_disabled/g' /home/user/.venv/lib/python3.12/site-packages/buildozer/__init__.py
+        sudo chown -R user:user /home/user/hostcwd
+        sudo chown -R user:user /home/user/.buildozer
     
     - name: Build APK with Buildozer
       run: |
         cd /home/user/hostcwd
-        echo "y" | buildozer android debug
+        buildozer android debug
       env:
         BUILDOZER_LOG_LEVEL: 2
+      timeout-minutes: 120
     
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
@@ -36,7 +39,6 @@ jobs:
       if: always()
       run: |
         echo "=== Build directory ==="
-        ls -lah /home/user/hostcwd/bin/ 2>/dev/null || echo "No bin directory"
+        ls -lah /home/user/hostcwd/bin/ 2>/dev/null || echo "No APK built"
         echo ""
-        echo "=== All APK files ==="
-        find /home/user/hostcwd -name "*.apk" 2>/dev/null || echo "No APK found"
+        find /home/user/hostcwd -name "*.apk" 2>/dev/null
