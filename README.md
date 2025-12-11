@@ -55,8 +55,7 @@ A fun Flappy Bird clone built with Python and Kivy framework.
 flappy-modi/
 ├── main.py              # Main game code
 ├── requirements.txt     # Python dependencies
-├── README.md           # This file
-├── .gitignore          # Git ignore rules
+├── README.md           # This file        
 └── recs/               # Game assets (images & audio)
     ├── background.jpeg
     ├── character.jpg
