@@ -11,7 +11,7 @@ A fun Flappy Bird clone built with Python and Kivy framework.
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/S-Leishem/flappy-modi.git
    cd flappy-modi
    ```
 
